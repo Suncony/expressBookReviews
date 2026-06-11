@@ -1,3 +1,4 @@
+const axios = require('axios');
 const express = require('express');
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
@@ -41,7 +42,7 @@ public_users.get('/',function (req, res) {
 
     getBooks
         .then((bookList) => {
-            return res.send(JSON.stringify(bookList, null, 4));
+            return res.send(bookList);
         })
         .catch((err) => {
             return res.status(500).send(err);
@@ -53,15 +54,19 @@ public_users.get('/isbn/:isbn',function (req, res) {
     //Write your code here
     const isbn = req.params.isbn;
 
-    const getBook = new Promise((resolve, reject) => {
+    axios.get('http://localhost:5000/')
+        .then(function (response) {
+            const books = response.data;
 
-        if (books[isbn]) {
-            resolve(books[isbn]);
-        } else {
-            reject("Book not found");
-        }
-
-    });
+            if (books[isbn]) {
+                return res.send(books[isbn]);
+            } else {
+                return res.status(404).send("Book not found");
+            }
+        })
+        .catch(function (error) {
+            return res.status(500).send("Error retrieving book by ISBN");
+        });
 
     getBook
         .then((book) => {
@@ -77,32 +82,25 @@ public_users.get('/author/:author',function (req, res) {
     //Write your code here
     const author = req.params.author;
 
-    const getBook = new Promise((resolve, reject) => {
+    axios.get('http://localhost:5000/')
+        .then(function (response) {
+            const books = response.data;
+            const matchingBooks = [];
 
-        const keys = Object.keys(books);
-        const matchingBooks = [];
+            Object.keys(books).forEach(function (key) {
+                if (books[key].author === author) {
+                    matchingBooks.push(books[key]);
+                }
+            });
 
-        for (let key of keys) {
-            if (books[key].author === author) {
-                matchingBooks.push(books[key]);
+            if (matchingBooks.length > 0) {
+                return res.send(matchingBooks);
+            } else {
+                return res.status(404).send("Author not found");
             }
-        }
-
-        if (matchingBooks.length > 0) {
-            resolve(matchingBooks);
-        } else {
-            reject("Author not found");
-        }
-
-
-    });
-
-    getBook
-        .then((book) => {
-            return res.send(book);
         })
-        .catch((err) => {
-            return res.status(404).send(err);
+        .catch(function (error) {
+            return res.status(500).send("Error retrieving books by author");
         });
 });
 
@@ -111,32 +109,25 @@ public_users.get('/title/:title',function (req, res) {
     //Write your code here
     const title = req.params.title;
 
-    const getBook = new Promise((resolve, reject) => {
+    axios.get('http://localhost:5000/')
+        .then(function (response) {
+            const books = response.data;
+            const matchingBooks = [];
 
-        const keys = Object.keys(books);
-        const matchingBooks = [];
+            Object.keys(books).forEach(function (key) {
+                if (books[key].title === title) {
+                    matchingBooks.push(books[key]);
+                }
+            });
 
-        for (let key of keys) {
-            if (books[key].title === title) {
-                matchingBooks.push(books[key]);
+            if (matchingBooks.length > 0) {
+                return res.send(matchingBooks);
+            } else {
+                return res.status(404).send("Title not found");
             }
-        }
-
-        if (matchingBooks.length > 0) {
-            resolve(matchingBooks);
-        } else {
-            reject("Title not found");
-        }
-
-
-    });
-
-    getBook
-        .then((book) => {
-            return res.send(book);
         })
-        .catch((err) => {
-            return res.status(404).send(err);
+        .catch(function (error) {
+            return res.status(500).send("Error retrieving books by title");
         });
 });
 
